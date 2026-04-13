@@ -84,4 +84,14 @@ public class TransactionServiceImpl implements TransactionService {
     public List<Transaction> getWalletTransactions(UUID walletId) {
         return transactionRepository.findByWalletId(walletId);
     }
+
+    @Transactional
+    public Transaction createTopUp(UUID walletId, BigDecimal amount) {
+        return createTransaction(walletId, TransactionType.TOP_UP, amount, "Top Up");
+    }
+
+    @Transactional
+    public Transaction createWithdrawal(UUID walletId, BigDecimal amount) {
+        return createTransaction(walletId, TransactionType.WITHDRAWAL, amount, "Withdrawal");
+    }
 }
