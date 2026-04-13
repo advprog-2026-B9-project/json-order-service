@@ -70,6 +70,24 @@ public class TransactionServiceImpl implements TransactionService {
             walletService.decreaseBalance(transaction.getWalletId(), transaction.getAmount());
         }
 
+        if (transaction.getType() == TransactionType.PAYMENT) {
+            if (transaction.getTargetWalletId() == null) {
+                throw new IllegalStateException("Target wallet is required for PAYMENT");
+            }
+
+            walletService.decreaseBalance(transaction.getWalletId(), transaction.getAmount());
+            walletService.increaseBalance(transaction.getTargetWalletId(), transaction.getAmount());
+        }
+
+        if (transaction.getType() == TransactionType.REFUND) {
+            if (transaction.getTargetWalletId() == null) {
+                throw new IllegalStateException("Target wallet is required for REFUND");
+            }
+
+            walletService.increaseBalance(transaction.getWalletId(), transaction.getAmount());
+            walletService.decreaseBalance(transaction.getTargetWalletId(), transaction.getAmount());
+        }
+
         transaction.setStatus(TransactionStatus.SUCCESS);
 
         return transactionRepository.save(transaction);
