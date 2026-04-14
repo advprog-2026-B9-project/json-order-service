@@ -13,9 +13,12 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long titiperId;
+    private UUID titiperId;
+    private UUID jastiperId;
+
     private Long productId;
     private Integer quantity;
+    private BigDecimal totalPrice;
     private String shippingAddress;
     private String status;
     private LocalDateTime createdAt;
