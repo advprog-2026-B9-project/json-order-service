@@ -4,7 +4,7 @@ import com.b9.json.jsonplatform.order.domain.Order;
 import com.b9.json.jsonplatform.order.infrastructure.repository.OrderRepository;
 import com.b9.json.jsonplatform.order.application.external.InventoryServiceDummy;
 import com.b9.json.jsonplatform.wallet.application.WalletService;
-import com.b9.json.jsonplatform.wallet.application.TransactionService;
+import com.b9.json.jsonplatform.wallet.application.TransactionServiceImpl; 
 import com.b9.json.jsonplatform.wallet.domain.Transaction;
 import com.b9.json.jsonplatform.wallet.domain.Wallet;
 import org.springframework.stereotype.Service;
@@ -18,12 +18,12 @@ import java.util.UUID;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final WalletService walletService;
-    private final TransactionService transactionService;
+    private final TransactionServiceImpl transactionService;
     private final InventoryServiceDummy inventoryService;
 
     public OrderService(OrderRepository orderRepository,
                         WalletService walletService,
-                        TransactionService transactionService,
+                        TransactionServiceImpl transactionService,
                         InventoryServiceDummy inventoryService) {
         this.orderRepository = orderRepository;
         this.walletService = walletService;
@@ -31,6 +31,7 @@ public class OrderService {
         this.inventoryService = inventoryService;
     }
 
+    @Transactional
     public Order createOrder(Order order) {
         if (order.getQuantity() == null || order.getQuantity() <= 0) {
             throw new IllegalArgumentException("Jumlah barang harus lebih dari 0");
@@ -42,8 +43,7 @@ public class OrderService {
         if (!inventoryService.isStockAvailable(order.getProductId(), order.getQuantity())) {
             throw new IllegalStateException("Stok barang tidak mencukupi");
         }
-        
-        // Ambil data dompet dari Modul Wallet
+
         Wallet buyerWallet = walletService.getWalletByUserId(order.getTitiperId());
         Wallet sellerWallet = walletService.getWalletByUserId(order.getJastiperId());
 
@@ -51,7 +51,6 @@ public class OrderService {
             throw new IllegalStateException("Saldo Wallet tidak mencukupi");
         }
 
-        // Buat transaksi PAYMENT via Modul Wallet
         Transaction payment = transactionService.createPayment(
                 buyerWallet.getId(),
                 sellerWallet.getId(),
@@ -60,8 +59,8 @@ public class OrderService {
 
         transactionService.markSuccess(payment.getId());
         inventoryService.reserveStock(order.getProductId(), order.getQuantity());
-        order.setStatus("PAID");
 
+        order.setStatus("PAID");
         return orderRepository.save(order);
     }
 

@@ -4,6 +4,7 @@ import com.b9.json.jsonplatform.order.domain.Order;
 import com.b9.json.jsonplatform.order.application.service.OrderService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -21,7 +22,7 @@ public class OrderController {
     }
 
     @GetMapping("/history/{titiperId}")
-    public List<Order> history(@PathVariable Long titiperId) {
+    public List<Order> history(@PathVariable UUID titiperId) {
         return orderService.getTitiperHistory(titiperId);
     }
 }
