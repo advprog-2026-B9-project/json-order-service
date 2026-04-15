@@ -114,21 +114,25 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findByWalletId(walletId);
     }
 
+    @Override
     @Transactional
     public Transaction createTopUp(UUID walletId, BigDecimal amount) {
         return createTransaction(walletId, TransactionType.TOP_UP, amount, "Top Up");
     }
 
+    @Override
     @Transactional
     public Transaction createWithdrawal(UUID walletId, BigDecimal amount) {
         return createTransaction(walletId, TransactionType.WITHDRAWAL, amount, "Withdrawal");
     }
 
+    @Override
     @Transactional
     public Transaction createPayment(UUID walletId, UUID targetWalletId, BigDecimal amount) {
         return createTransaction(walletId, targetWalletId, TransactionType.PAYMENT, amount, "Payment");
     }
 
+    @Override
     @Transactional
     public Transaction createRefund(UUID walletId, UUID targetWalletId, BigDecimal amount) {
         return createTransaction(walletId, targetWalletId, TransactionType.REFUND, amount, "Refund");

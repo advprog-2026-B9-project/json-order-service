@@ -16,4 +16,8 @@ public interface TransactionService {
     Transaction markSuccess(UUID transactionId);
     Transaction markFailed(UUID transactionId);
     List<Transaction> getWalletTransactions(UUID walletId);
+    Transaction createTopUp(UUID walletId, BigDecimal amount);
+    Transaction createWithdrawal(UUID walletId, BigDecimal amount);
+    Transaction createPayment(UUID walletId, UUID targetWalletId, BigDecimal amount);
+    Transaction createRefund(UUID walletId, UUID targetWalletId, BigDecimal amount);
 }
