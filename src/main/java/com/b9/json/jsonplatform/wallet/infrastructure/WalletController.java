@@ -13,14 +13,18 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    @PostMapping("/{userId}")
+    @PostMapping("/users/{userId}")
     public Wallet createWallet(@PathVariable UUID userId) {
         return walletService.createWallet(userId);
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/{walletId}")
+    public Wallet getWalletById(@PathVariable UUID walletId) {
+        return walletService.getWalletById(walletId);
+    }
+
+    @GetMapping("/users/{userId}")
     public Wallet getWalletByUserId(@PathVariable UUID userId) {
         return walletService.getWalletByUserId(userId);
     }
-
 }
