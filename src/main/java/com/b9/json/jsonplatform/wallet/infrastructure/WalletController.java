@@ -13,9 +13,9 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    @PostMapping("/users/{userId}")
-    public Wallet createWallet(@PathVariable UUID userId) {
-        return walletService.createWallet(userId);
+    @PostMapping("/users/{id}")
+    public Wallet createWallet(@PathVariable("id") UUID id) {
+        return walletService.createWallet(id);
     }
 
     @GetMapping("/{walletId}")
@@ -23,8 +23,8 @@ public class WalletController {
         return walletService.getWalletById(walletId);
     }
 
-    @GetMapping("/users/{userId}")
-    public Wallet getWalletByUserId(@PathVariable UUID userId) {
-        return walletService.getWalletByUserId(userId);
+    @GetMapping("/users/{id}")
+    public Wallet getWalletByUserId(@PathVariable("id") UUID id) {
+        return walletService.getWalletByUserId(id);
     }
 }
