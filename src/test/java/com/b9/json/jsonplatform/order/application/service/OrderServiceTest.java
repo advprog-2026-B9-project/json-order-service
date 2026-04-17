@@ -11,6 +11,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -58,11 +59,12 @@ class OrderServiceTest {
     void testUpdateStatusFromPaidToCompletedShouldThrowException() {
         Order order = new Order();
         order.setStatus("PAID");
+        UUID dummyOrderId = UUID.randomUUID();
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(dummyOrderId)).thenReturn(Optional.of(order));
 
         Exception exception = assertThrows(IllegalStateException.class, () -> {
-            orderService.updateStatus(1L, "COMPLETED");
+            orderService.updateStatus(dummyOrderId, "COMPLETED");
         });
 
         assertEquals("Pesanan harus dikirim (SHIPPED) sebelum selesai", exception.getMessage());
@@ -72,26 +74,29 @@ class OrderServiceTest {
     void testUpdateStatusToShippedShouldSuccess() {
         Order order = new Order();
         order.setStatus("PAID");
+        UUID dummyOrderId = UUID.randomUUID();
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(dummyOrderId)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Order result = orderService.updateStatus(1L, "SHIPPED");
+        Order result = orderService.updateStatus(dummyOrderId, "SHIPPED");
 
         assertEquals("SHIPPED", result.getStatus());
     }
 
     @Test
     void testGetTitiperHistory() {
+        UUID dummyTitiperId = UUID.randomUUID();
+
         Order o1 = new Order();
-        o1.setTitiperId(1L);
+        o1.setTitiperId(dummyTitiperId);
         List<Order> history = Arrays.asList(o1);
 
-        when(orderRepository.findByTitiperId(1L)).thenReturn(history);
+        when(orderRepository.findByTitiperId(dummyTitiperId)).thenReturn(history);
 
-        List<Order> result = orderService.getTitiperHistory(1L);
+        List<Order> result = orderService.getTitiperHistory(dummyTitiperId);
 
         assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getTitiperId());
+        assertEquals(dummyTitiperId, result.get(0).getTitiperId());
     }
 }
