@@ -5,6 +5,7 @@ import com.b9.json.jsonplatform.order.infrastructure.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -18,7 +19,7 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public Order updateStatus(Long orderId, String newStatus) {
+    public Order updateStatus(UUID orderId, String newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order tidak ditemukan"));
 
@@ -30,7 +31,7 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public List<Order> getTitiperHistory(Long titiperId) {
+    public List<Order> getTitiperHistory(UUID titiperId) {
         return orderRepository.findByTitiperId(titiperId);
     }
 }
