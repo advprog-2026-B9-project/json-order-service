@@ -2,7 +2,8 @@ package com.b9.json.jsonplatform.order.application.service;
 
 import com.b9.json.jsonplatform.order.domain.Order;
 import com.b9.json.jsonplatform.order.infrastructure.repository.OrderRepository;
-import com.b9.json.jsonplatform.order.application.external.InventoryServiceDummy;
+import com.b9.json.jsonplatform.inventory.domain.model.Product; // Import model produk asli
+import com.b9.json.jsonplatform.inventory.domain.repository.ProductRepository; // Import repo produk asli
 import com.b9.json.jsonplatform.wallet.application.WalletService;
 import com.b9.json.jsonplatform.wallet.application.TransactionServiceImpl; 
 import com.b9.json.jsonplatform.wallet.domain.Transaction;
@@ -19,16 +20,15 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final WalletService walletService;
     private final TransactionServiceImpl transactionService;
-    private final InventoryServiceDummy inventoryService;
-
+    private final ProductRepository productRepository; 
     public OrderService(OrderRepository orderRepository,
                         WalletService walletService,
                         TransactionServiceImpl transactionService,
-                        InventoryServiceDummy inventoryService) {
+                        ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.walletService = walletService;
         this.transactionService = transactionService;
-        this.inventoryService = inventoryService;
+        this.productRepository = productRepository;
     }
 
     @Transactional
@@ -36,12 +36,12 @@ public class OrderService {
         if (order.getQuantity() == null || order.getQuantity() <= 0) {
             throw new IllegalArgumentException("Jumlah barang harus lebih dari 0");
         }
-        if (order.getTotalPrice() == null || order.getTotalPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Total harga tidak valid");
-        }
 
-        if (!inventoryService.isStockAvailable(order.getProductId(), order.getQuantity())) {
-            throw new IllegalStateException("Stok barang tidak mencukupi");
+        Product product = productRepository.findById(order.getProductId())
+                .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
+
+        if (product.getStock() < order.getQuantity()) {
+            throw new IllegalStateException("Stok barang tidak mencukupi. Sisa stok: " + product.getStock());
         }
 
         Wallet buyerWallet = walletService.getWalletByUserId(order.getTitiperId());
@@ -56,9 +56,9 @@ public class OrderService {
                 sellerWallet.getId(),
                 order.getTotalPrice()
         );
-
         transactionService.markSuccess(payment.getId());
-        inventoryService.reserveStock(order.getProductId(), order.getQuantity());
+        product.setStock(product.getStock() - order.getQuantity());
+        productRepository.save(product); // Simpan perubahan stok ke database product
 
         order.setStatus("PAID");
         return orderRepository.save(order);
@@ -67,11 +67,6 @@ public class OrderService {
     public Order updateStatus(UUID orderId, String newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order tidak ditemukan"));
-
-        if (order.getStatus().equals("PAID") && newStatus.equals("COMPLETED")) {
-            throw new IllegalStateException("Pesanan harus dikirim (SHIPPED) sebelum selesai");
-        }
-
         order.setStatus(newStatus);
         return orderRepository.save(order);
     }
