@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,7 +17,7 @@ public class Order {
     private UUID titiperId;
     private UUID jastiperId;
 
-    private Long productId;
+    private UUID productId;
     private Integer quantity;
     private BigDecimal totalPrice;
     private String shippingAddress;

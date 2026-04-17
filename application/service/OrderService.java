@@ -64,7 +64,7 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public Order updateStatus(Long orderId, String newStatus) {
+    public Order updateStatus(UUID orderId, String newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order tidak ditemukan"));
 
