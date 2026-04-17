@@ -91,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
             user.setFullName(fullName);
             user.setNikKtp(nikKtp);
             user.setKtpImageUrl(ktpImageUrl);
-            user.setKycStatus("PENDING_VERIFICATION"); // Mengubah status
+            user.setKycStatus("PENDING_VERIFICATION");
             return userRepository.save(user);
         }
         return null;
@@ -110,9 +110,10 @@ public class AuthServiceImpl implements AuthService {
         if (user != null && "PENDING_VERIFICATION".equals(user.getKycStatus())) {
             if (approved) {
                 user.setKycStatus("VERIFIED");
-                user.setRole("JASTIPER"); // Upgrade peran Titipers -> Jastiper
-            } else {
-                user.setKycStatus("REJECTED");
+                user.setRole("JASTIPER");
+            }
+            else {
+                user.setKycStatus("UNVERIFIED");
             }
             return userRepository.save(user);
         }
