@@ -49,45 +49,29 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/purchased")
-    public ResponseEntity<?> markPurchased(@PathVariable UUID orderId) {
-        try {
-            OrderStatusContext ctx = OrderStatusContext.builder().build();
-            return ResponseEntity.ok(orderService.updateStatus(orderId, "PURCHASED", ctx));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Order> markPurchased(@PathVariable UUID orderId) {
+        OrderStatusContext ctx = OrderStatusContext.builder().build();
+        return ResponseEntity.ok(orderService.updateStatus(orderId, "PURCHASED", ctx));
     }
 
     @PatchMapping("/{orderId}/shipped")
-    public ResponseEntity<?> markShipped(@PathVariable UUID orderId,
-                                         @RequestParam String trackingNumber) {
-        try {
-            OrderStatusContext ctx = OrderStatusContext.builder()
-                    .trackingNumber(trackingNumber)
-                    .build();
-            return ResponseEntity.ok(orderService.updateStatus(orderId, "SHIPPED", ctx));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Order> markShipped(@PathVariable UUID orderId,
+                                             @RequestParam String trackingNumber) {
+        OrderStatusContext ctx = OrderStatusContext.builder()
+                .trackingNumber(trackingNumber)
+                .build();
+        return ResponseEntity.ok(orderService.updateStatus(orderId, "SHIPPED", ctx));
     }
 
     @PatchMapping("/{orderId}/completed")
-    public ResponseEntity<?> markCompleted(@PathVariable UUID orderId) {
-        try {
-            OrderStatusContext ctx = OrderStatusContext.builder().build();
-            return ResponseEntity.ok(orderService.updateStatus(orderId, "COMPLETED", ctx));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Order> markCompleted(@PathVariable UUID orderId) {
+        OrderStatusContext ctx = OrderStatusContext.builder().build();
+        return ResponseEntity.ok(orderService.updateStatus(orderId, "COMPLETED", ctx));
     }
 
     @PatchMapping("/{orderId}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable UUID orderId) {
-        try {
-            return ResponseEntity.ok(orderService.cancelAndRefundOrder(orderId));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Order> cancelOrder(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(orderService.cancelAndRefundOrder(orderId));
     }
 
     @PostMapping("/{orderId}/rate")
