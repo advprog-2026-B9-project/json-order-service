@@ -32,9 +32,10 @@ jobs:
       - name: Run Tests & Linters (Checkstyle & JaCoCo)
         run: ./gradlew check
         env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DATABASE_URL: jdbc:h2:mem:testdb;MODE=PostgreSQL
+          AUTH_SERVICE_URL: http://localhost:8081
+          WALLET_SERVICE_URL: http://localhost:8082
+          INVENTORY_SERVICE_URL: http://localhost:8083
 
       - name: Upload Test Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -78,7 +79,7 @@ jobs:
           sleep 2
           echo "Mematikan service backend lama..."
           sleep 2
-          echo "Memulai json-platform-staging.jar di environment isolasi..."
+          echo "Memulai json-order-service.jar di environment isolasi..."
           sleep 3
           echo "Dummy Deployment ke Staging berhasil!"
-          echo "URL Staging: https://staging-b09.json-platform.com"
+          echo "URL Staging: https://staging.json-order-service.com"
