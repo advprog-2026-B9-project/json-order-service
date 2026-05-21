@@ -1,12 +1,12 @@
 package com.b9.json.jsonplatform.order.application.external.impl;
 
-import com.b9.json.jsonplatform.auth.application.service.AuthService;
-import com.b9.json.jsonplatform.auth.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.UUID;
 
@@ -16,24 +16,26 @@ import static org.mockito.Mockito.*;
 class AuthServiceClientImplTest {
 
     @Mock
-    private AuthService authService;
+    private RestTemplate restTemplate;
 
     @InjectMocks
     private AuthServiceClientImpl authServiceClient;
 
+    private static final String AUTH_URL = "http://localhost:8081";
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(authServiceClient, "authServiceUrl", AUTH_URL);
     }
 
     @Test
     void testFindEmailById_Success() {
         UUID userId = UUID.randomUUID();
-        User user = new User();
-        user.setId(userId);
-        user.setEmail("jastiper@gmail.com");
-
-        when(authService.findById(userId)).thenReturn(user);
+        when(restTemplate.getForObject(
+                AUTH_URL + "/api/v1/users/" + userId + "/email",
+                String.class
+        )).thenReturn("jastiper@gmail.com");
 
         String result = authServiceClient.findEmailById(userId);
 
@@ -41,42 +43,51 @@ class AuthServiceClientImplTest {
     }
 
     @Test
-    void testFindEmailById_UserNotFound_ShouldThrow() {
+    void testFindEmailById_ReturnsNull_WhenNotFound() {
         UUID userId = UUID.randomUUID();
-        when(authService.findById(userId)).thenReturn(null);
+        when(restTemplate.getForObject(
+                AUTH_URL + "/api/v1/users/" + userId + "/email",
+                String.class
+        )).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                authServiceClient.findEmailById(userId)
-        );
+        String result = authServiceClient.findEmailById(userId);
+
+        assertNull(result);
     }
 
     @Test
     void testFindUserIdByUsername_Success() {
-        UUID userId = UUID.randomUUID();
-        User user = new User();
-        user.setId(userId);
-        user.setUsername("jastiper_budi");
-
-        when(authService.findByUsername("jastiper_budi")).thenReturn(user);
+        UUID expectedId = UUID.randomUUID();
+        when(restTemplate.getForObject(
+                AUTH_URL + "/api/v1/users/username/jastiper_budi/id",
+                UUID.class
+        )).thenReturn(expectedId);
 
         UUID result = authServiceClient.findUserIdByUsername("jastiper_budi");
 
-        assertEquals(userId, result);
+        assertEquals(expectedId, result);
     }
 
     @Test
-    void testFindUserIdByUsername_NotFound_ShouldThrow() {
-        when(authService.findByUsername("ghost")).thenReturn(null);
+    void testFindUserIdByUsername_ReturnsNull_WhenNotFound() {
+        when(restTemplate.getForObject(
+                AUTH_URL + "/api/v1/users/username/ghost/id",
+                UUID.class
+        )).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                authServiceClient.findUserIdByUsername("ghost")
-        );
+        UUID result = authServiceClient.findUserIdByUsername("ghost");
+
+        assertNull(result);
     }
 
     @Test
-    void testAddRating_ShouldDelegate() {
+    void testAddRating_ShouldCallCorrectUrl() {
         authServiceClient.addRating("jastiper@gmail.com", 5);
 
-        verify(authService).addRating("jastiper@gmail.com", 5);
+        verify(restTemplate).postForObject(
+                AUTH_URL + "/api/v1/users/jastiper@gmail.com/rating?score=5",
+                null,
+                Void.class
+        );
     }
 }
