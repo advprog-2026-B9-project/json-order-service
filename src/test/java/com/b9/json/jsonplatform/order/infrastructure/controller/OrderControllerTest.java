@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -45,7 +44,7 @@ class OrderControllerTest {
 
         when(orderService.getTitiperHistory(titiperId)).thenReturn(List.of(order));
 
-        mockMvc.perform(get("/api/orders/history/" + titiperId))
+        mockMvc.perform(get("/api/v1/orders/history/" + titiperId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].titiperId").value(titiperId.toString()));
     }
@@ -58,7 +57,7 @@ class OrderControllerTest {
 
         when(orderService.getOrdersByJastiper(jastiperId)).thenReturn(List.of(order));
 
-        mockMvc.perform(get("/api/orders/jastiper/" + jastiperId))
+        mockMvc.perform(get("/api/v1/orders/jastiper/" + jastiperId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].jastiperId").value(jastiperId.toString()));
     }
@@ -70,7 +69,7 @@ class OrderControllerTest {
 
         when(orderService.getAllOrdersForAdmin()).thenReturn(List.of(order));
 
-        mockMvc.perform(get("/api/orders/admin/all"))
+        mockMvc.perform(get("/api/v1/orders/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("PAID"));
     }
@@ -80,7 +79,7 @@ class OrderControllerTest {
         UUID jastiperId = UUID.randomUUID();
         when(orderService.getTotalSuccessfulOrdersByJastiper(jastiperId)).thenReturn(5L);
 
-        mockMvc.perform(get("/api/orders/jastiper/" + jastiperId + "/stats"))
+        mockMvc.perform(get("/api/v1/orders/jastiper/" + jastiperId + "/stats"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("5"));
     }
@@ -99,7 +98,7 @@ class OrderControllerTest {
 
         when(orderService.createOrder(any())).thenReturn(order);
 
-        mockMvc.perform(post("/api/orders/checkout")
+        mockMvc.perform(post("/api/v1/orders/checkout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(order)))
                 .andExpect(status().isOk())
@@ -115,7 +114,7 @@ class OrderControllerTest {
         when(orderService.createOrder(any()))
                 .thenThrow(new IllegalArgumentException("Jumlah barang harus lebih dari 0"));
 
-        mockMvc.perform(post("/api/orders/checkout")
+        mockMvc.perform(post("/api/v1/orders/checkout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(order)))
                 .andExpect(status().isBadRequest());
@@ -131,7 +130,7 @@ class OrderControllerTest {
 
         when(orderService.giveRating(eq(orderId), eq(5), eq(4))).thenReturn(order);
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/rate")
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/rate")
                         .param("jastiperRating", "5")
                         .param("productRating", "4"))
                 .andExpect(status().isOk())
@@ -145,7 +144,7 @@ class OrderControllerTest {
         when(orderService.giveRating(eq(orderId), eq(6), eq(4)))
                 .thenThrow(new IllegalArgumentException("Rating Jastiper harus di antara 1 dan 5"));
 
-        mockMvc.perform(post("/api/orders/" + orderId + "/rate")
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/rate")
                         .param("jastiperRating", "6")
                         .param("productRating", "4"))
                 .andExpect(status().isBadRequest());
@@ -162,7 +161,7 @@ class OrderControllerTest {
         when(orderService.updateStatus(eq(orderId), eq("PURCHASED"), any(OrderStatusContext.class)))
                 .thenReturn(order);
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/purchased"))
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/purchased"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PURCHASED"));
     }
@@ -174,7 +173,7 @@ class OrderControllerTest {
         when(orderService.updateStatus(eq(orderId), eq("PURCHASED"), any(OrderStatusContext.class)))
                 .thenThrow(new IllegalStateException("Hanya pesanan berstatus PAID yang bisa diproses"));
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/purchased"))
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/purchased"))
                 .andExpect(status().isConflict());
     }
 
@@ -188,7 +187,7 @@ class OrderControllerTest {
         when(orderService.updateStatus(eq(orderId), eq("SHIPPED"), any(OrderStatusContext.class)))
                 .thenReturn(order);
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/shipped")
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/shipped")
                         .param("trackingNumber", "JNE-12345"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SHIPPED"));
@@ -201,7 +200,7 @@ class OrderControllerTest {
         when(orderService.updateStatus(eq(orderId), eq("SHIPPED"), any(OrderStatusContext.class)))
                 .thenThrow(new IllegalArgumentException("Nomor resi wajib diisi"));
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/shipped")
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/shipped")
                         .param("trackingNumber", ""))
                 .andExpect(status().isBadRequest());
     }
@@ -215,7 +214,7 @@ class OrderControllerTest {
         when(orderService.updateStatus(eq(orderId), eq("COMPLETED"), any(OrderStatusContext.class)))
                 .thenReturn(order);
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/completed"))
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/completed"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
@@ -227,7 +226,7 @@ class OrderControllerTest {
         when(orderService.updateStatus(eq(orderId), eq("COMPLETED"), any(OrderStatusContext.class)))
                 .thenThrow(new IllegalStateException("Pesanan belum dikirim, tidak bisa diselesaikan"));
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/completed"))
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/completed"))
                 .andExpect(status().isConflict());
     }
 
@@ -239,7 +238,7 @@ class OrderControllerTest {
 
         when(orderService.cancelAndRefundOrder(orderId)).thenReturn(order);
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/cancel"))
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/cancel"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
@@ -251,7 +250,7 @@ class OrderControllerTest {
         when(orderService.cancelAndRefundOrder(orderId))
                 .thenThrow(new IllegalStateException("Pesanan tidak dapat dibatalkan pada status ini"));
 
-        mockMvc.perform(patch("/api/orders/" + orderId + "/cancel"))
+        mockMvc.perform(patch("/api/v1/orders/" + orderId + "/cancel"))
                 .andExpect(status().isConflict());
     }
 }
