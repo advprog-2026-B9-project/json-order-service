@@ -5,7 +5,7 @@ import com.b9.json.jsonplatform.order.infrastructure.repository.OrderRepository;
 import com.b9.json.jsonplatform.inventory.domain.model.Product; // Import model produk asli
 import com.b9.json.jsonplatform.inventory.domain.repository.ProductRepository; // Import repo produk asli
 import com.b9.json.jsonplatform.wallet.application.WalletService;
-import com.b9.json.jsonplatform.wallet.application.TransactionServiceImpl; 
+import com.b9.json.jsonplatform.wallet.application.TransactionServiceImpl;
 import com.b9.json.jsonplatform.wallet.domain.Transaction;
 import com.b9.json.jsonplatform.wallet.domain.Wallet;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final WalletService walletService;
     private final TransactionServiceImpl transactionService;
-    private final ProductRepository productRepository; 
+    private final ProductRepository productRepository;
     public OrderService(OrderRepository orderRepository,
                         WalletService walletService,
                         TransactionServiceImpl transactionService,
@@ -33,35 +33,39 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
-        if (order.getQuantity() == null || order.getQuantity() <= 0) {
-            throw new IllegalArgumentException("Jumlah barang harus lebih dari 0");
+        try {
+            if (order.getQuantity() == null || order.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Jumlah barang harus lebih dari 0");
+            }
+
+            Product product = productService.getProductById(order.getProductId());
+            order.setProductName(product.getName());
+
+            Wallet buyerWallet = walletService.getWalletByUserId(order.getTitiperId());
+            Wallet sellerWallet = walletService.getWalletByUserId(order.getJastiperId());
+
+            if (buyerWallet.getBalance().compareTo(order.getTotalPrice()) < 0) {
+                throw new IllegalStateException("Saldo Wallet Titiper tidak mencukupi!");
+            }
+
+            Transaction payment = transactionService.createPayment(
+                    buyerWallet.getId(),
+                    sellerWallet.getId(),
+                    order.getTotalPrice()
+            );
+
+            if (payment != null) {
+                transactionService.markSuccess(payment.getId());
+            }
+
+            productService.deductProductStock(order.getProductId(), order.getQuantity());
+
+            order.setStatus("PAID");
+            return orderRepository.save(order);
+
+        } catch (Exception e) {
+            throw new RuntimeException("CRASH DI CHECKOUT: " + e.getMessage());
         }
-
-        Product product = productRepository.findById(order.getProductId())
-                .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
-
-        if (product.getStock() < order.getQuantity()) {
-            throw new IllegalStateException("Stok barang tidak mencukupi. Sisa stok: " + product.getStock());
-        }
-
-        Wallet buyerWallet = walletService.getWalletByUserId(order.getTitiperId());
-        Wallet sellerWallet = walletService.getWalletByUserId(order.getJastiperId());
-
-        if (buyerWallet.getBalance().compareTo(order.getTotalPrice()) < 0) {
-            throw new IllegalStateException("Saldo Wallet tidak mencukupi");
-        }
-
-        Transaction payment = transactionService.createPayment(
-                buyerWallet.getId(),
-                sellerWallet.getId(),
-                order.getTotalPrice()
-        );
-        transactionService.markSuccess(payment.getId());
-        product.setStock(product.getStock() - order.getQuantity());
-        productRepository.save(product); // Simpan perubahan stok ke database product
-
-        order.setStatus("PAID");
-        return orderRepository.save(order);
     }
 
     public Order updateStatus(UUID orderId, String newStatus) {
