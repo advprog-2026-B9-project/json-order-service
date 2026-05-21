@@ -1,16 +1,15 @@
 package com.b9.json.jsonplatform.order.application.external.impl;
 
-import com.b9.json.jsonplatform.wallet.application.TransactionService;
-import com.b9.json.jsonplatform.wallet.application.WalletService;
-import com.b9.json.jsonplatform.wallet.domain.Transaction;
-import com.b9.json.jsonplatform.wallet.domain.Wallet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,71 +18,81 @@ import static org.mockito.Mockito.*;
 class WalletServiceClientImplTest {
 
     @Mock
-    private WalletService walletService;
-
-    @Mock
-    private TransactionService transactionService;
+    private RestTemplate restTemplate;
 
     @InjectMocks
     private WalletServiceClientImpl walletServiceClient;
 
+    private static final String WALLET_URL = "http://localhost:8083";
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(walletServiceClient, "walletServiceUrl", WALLET_URL);
     }
 
     @Test
     void testGetWalletId_Success() {
         UUID userId = UUID.randomUUID();
-        UUID walletId = UUID.randomUUID();
-        Wallet wallet = mock(Wallet.class);
-        when(wallet.getId()).thenReturn(walletId);
-        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
+        UUID expectedWalletId = UUID.randomUUID();
+        when(restTemplate.getForObject(
+                WALLET_URL + "/api/v1/wallets/user/" + userId + "/id",
+                UUID.class
+        )).thenReturn(expectedWalletId);
 
-        assertEquals(walletId, walletServiceClient.getWalletId(userId));
+        UUID result = walletServiceClient.getWalletId(userId);
+
+        assertEquals(expectedWalletId, result);
     }
 
     @Test
     void testGetBalance_Success() {
         UUID userId = UUID.randomUUID();
-        Wallet wallet = mock(Wallet.class);
-        when(wallet.getBalance()).thenReturn(new BigDecimal("500000"));
-        when(walletService.getWalletByUserId(userId)).thenReturn(wallet);
+        when(restTemplate.getForObject(
+                WALLET_URL + "/api/v1/wallets/user/" + userId + "/balance",
+                BigDecimal.class
+        )).thenReturn(new BigDecimal("500000"));
 
-        assertEquals(new BigDecimal("500000"), walletServiceClient.getBalance(userId));
+        BigDecimal result = walletServiceClient.getBalance(userId);
+
+        assertEquals(new BigDecimal("500000"), result);
     }
 
     @Test
-    void testCreatePayment_ShouldCreateAndMarkSuccess() {
+    void testCreatePayment_ShouldCallCorrectUrlWithBody() {
         UUID buyerWalletId = UUID.randomUUID();
         UUID sellerWalletId = UUID.randomUUID();
-        UUID txId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("100000");
-
-        Transaction tx = mock(Transaction.class);
-        when(tx.getId()).thenReturn(txId);
-        when(transactionService.createPayment(buyerWalletId, sellerWalletId, amount)).thenReturn(tx);
 
         walletServiceClient.createPayment(buyerWalletId, sellerWalletId, amount);
 
-        verify(transactionService).createPayment(buyerWalletId, sellerWalletId, amount);
-        verify(transactionService).markSuccess(txId);
+        verify(restTemplate).postForObject(
+                eq(WALLET_URL + "/api/v1/wallets/payment"),
+                eq(Map.of(
+                        "buyerWalletId", buyerWalletId,
+                        "sellerWalletId", sellerWalletId,
+                        "amount", amount
+                )),
+                eq(Void.class)
+        );
     }
 
     @Test
-    void testCreateRefund_ShouldSwapWalletOrderAndMarkSuccess() {
+    void testCreateRefund_ShouldCallCorrectUrlWithBody() {
         UUID buyerWalletId = UUID.randomUUID();
         UUID sellerWalletId = UUID.randomUUID();
-        UUID txId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("200000");
-
-        Transaction tx = mock(Transaction.class);
-        when(tx.getId()).thenReturn(txId);
-        when(transactionService.createRefund(sellerWalletId, buyerWalletId, amount)).thenReturn(tx);
 
         walletServiceClient.createRefund(buyerWalletId, sellerWalletId, amount);
 
-        verify(transactionService).createRefund(sellerWalletId, buyerWalletId, amount);
-        verify(transactionService).markSuccess(txId);
+        verify(restTemplate).postForObject(
+                eq(WALLET_URL + "/api/v1/wallets/refund"),
+                eq(Map.of(
+                        "sellerWalletId", sellerWalletId,
+                        "buyerWalletId", buyerWalletId,
+                        "amount", amount
+                )),
+                eq(Void.class)
+        );
     }
 }
