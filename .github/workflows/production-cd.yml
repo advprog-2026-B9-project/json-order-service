@@ -23,23 +23,3 @@ jobs:
         with:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
-
-      - name: Releasing New Version
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            docker rmi $(docker images -a -q)
-            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
-            source .env
-            docker run -d \
-            --name=web_server \
-            -p 8080:8080 \
-            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            -e AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} \
-            -e WALLET_SERVICE_URL=${{ secrets.WALLET_SERVICE_URL }} \
-            -e INVENTORY_SERVICE_URL=${{ secrets.INVENTORY_SERVICE_URL }} \
-            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
