@@ -38,7 +38,8 @@ jobs:
             docker run -d \
             --name=web_server \
             -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
-            -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
-            -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+            -e AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} \
+            -e WALLET_SERVICE_URL=${{ secrets.WALLET_SERVICE_URL }} \
+            -e INVENTORY_SERVICE_URL=${{ secrets.INVENTORY_SERVICE_URL }} \
             ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
