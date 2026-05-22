@@ -43,14 +43,13 @@ public class AuthServiceClientImpl implements AuthServiceClient {
 
     @Override
     public UUID findUserIdByUsername(String username) {
-        // GET /api/v1/auth/list → filter by username
         UserDto[] users = restTemplate.getForObject(
                 authServiceUrl + "/api/v1/auth/list",
                 UserDto[].class
         );
         if (users == null) throw new IllegalArgumentException("Gagal fetch users dari auth-service");
         return java.util.Arrays.stream(users)
-                .filter(u -> username.equals(u.getUsername()))
+                .filter(u -> u.getUsername() != null && u.getUsername().equals(username))
                 .map(UserDto::getId)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("User tidak ditemukan: " + username));
