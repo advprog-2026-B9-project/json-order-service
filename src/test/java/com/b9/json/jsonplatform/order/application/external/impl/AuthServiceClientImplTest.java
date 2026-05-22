@@ -32,52 +32,76 @@ class AuthServiceClientImplTest {
     @Test
     void testFindEmailById_Success() {
         UUID userId = UUID.randomUUID();
+
+        AuthServiceClientImpl.UserInternalDto user = new AuthServiceClientImpl.UserInternalDto();
+        user.setId(userId);
+        user.setEmail("jastiper@gmail.com");
+        user.setUsername("jastiper_budi");
+
         when(restTemplate.getForObject(
-                AUTH_URL + "/api/v1/users/" + userId + "/email",
-                String.class
-        )).thenReturn("jastiper@gmail.com");
+                AUTH_URL + "/api/v1/auth/internal/user?id=" + userId,
+                AuthServiceClientImpl.UserInternalDto.class
+        )).thenReturn(user);
 
         String result = authServiceClient.findEmailById(userId);
-
         assertEquals("jastiper@gmail.com", result);
     }
 
     @Test
-    void testFindEmailById_ReturnsNull_WhenNotFound() {
+    void testFindEmailById_NotFound_ThrowsException() {
         UUID userId = UUID.randomUUID();
+
         when(restTemplate.getForObject(
-                AUTH_URL + "/api/v1/users/" + userId + "/email",
-                String.class
+                AUTH_URL + "/api/v1/auth/internal/user?id=" + userId,
+                AuthServiceClientImpl.UserInternalDto.class
         )).thenReturn(null);
 
-        String result = authServiceClient.findEmailById(userId);
-
-        assertNull(result);
+        assertThrows(IllegalArgumentException.class,
+                () -> authServiceClient.findEmailById(userId));
     }
 
     @Test
     void testFindUserIdByUsername_Success() {
         UUID expectedId = UUID.randomUUID();
+
+        AuthServiceClientImpl.UserDto user = new AuthServiceClientImpl.UserDto();
+        user.setId(expectedId);
+        user.setEmail("jastiper@gmail.com");
+        user.setUsername("jastiper_budi");
+
         when(restTemplate.getForObject(
-                AUTH_URL + "/api/v1/users/username/jastiper_budi/id",
-                UUID.class
-        )).thenReturn(expectedId);
+                AUTH_URL + "/api/v1/auth/list",
+                AuthServiceClientImpl.UserDto[].class
+        )).thenReturn(new AuthServiceClientImpl.UserDto[]{user});
 
         UUID result = authServiceClient.findUserIdByUsername("jastiper_budi");
-
         assertEquals(expectedId, result);
     }
 
     @Test
-    void testFindUserIdByUsername_ReturnsNull_WhenNotFound() {
+    void testFindUserIdByUsername_NotFound_ThrowsException() {
+        AuthServiceClientImpl.UserDto other = new AuthServiceClientImpl.UserDto();
+        other.setId(UUID.randomUUID());
+        other.setUsername("other_user");
+
         when(restTemplate.getForObject(
-                AUTH_URL + "/api/v1/users/username/ghost/id",
-                UUID.class
+                AUTH_URL + "/api/v1/auth/list",
+                AuthServiceClientImpl.UserDto[].class
+        )).thenReturn(new AuthServiceClientImpl.UserDto[]{other});
+
+        assertThrows(IllegalArgumentException.class,
+                () -> authServiceClient.findUserIdByUsername("ghost"));
+    }
+
+    @Test
+    void testFindUserIdByUsername_NullResponse_ThrowsException() {
+        when(restTemplate.getForObject(
+                AUTH_URL + "/api/v1/auth/list",
+                AuthServiceClientImpl.UserDto[].class
         )).thenReturn(null);
 
-        UUID result = authServiceClient.findUserIdByUsername("ghost");
-
-        assertNull(result);
+        assertThrows(IllegalArgumentException.class,
+                () -> authServiceClient.findUserIdByUsername("jastiper_budi"));
     }
 
     @Test
@@ -85,7 +109,7 @@ class AuthServiceClientImplTest {
         authServiceClient.addRating("jastiper@gmail.com", 5);
 
         verify(restTemplate).postForObject(
-                AUTH_URL + "/api/v1/users/jastiper@gmail.com/rating?score=5",
+                AUTH_URL + "/api/v1/auth/rating?jastiperEmail=jastiper@gmail.com&ratingScore=5",
                 null,
                 Void.class
         );
