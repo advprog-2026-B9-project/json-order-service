@@ -30,19 +30,20 @@ public class OrderService {
     public Order createOrder(Order order) {
         validateOrder(order);
 
-        String ownerUsername = inventoryServiceClient.getProductOwnerUsername(order.getProductId());
-        String productName   = inventoryServiceClient.getProductName(order.getProductId());
-        UUID jastiperId      = authServiceClient.findUserIdByUsername(ownerUsername);
-
+        String productName = inventoryServiceClient.getProductName(order.getProductId());
         order.setProductName(productName);
-        order.setJastiperId(jastiperId);
-        order.setJastiperUsername(ownerUsername);
+
+        if (order.getJastiperId() == null) {
+            String ownerUsername = inventoryServiceClient.getProductOwnerUsername(order.getProductId());
+            UUID jastiperId = authServiceClient.findUserIdByUsername(ownerUsername);
+            order.setJastiperId(jastiperId);
+        }
 
         if (walletServiceClient.getBalance(order.getTitiperId()).compareTo(order.getTotalPrice()) < 0) {
             throw new IllegalStateException("Saldo Wallet tidak mencukupi");
         }
 
-        UUID buyerWalletId  = walletServiceClient.getWalletId(order.getTitiperId());
+        UUID buyerWalletId = walletServiceClient.getWalletId(order.getTitiperId());
         UUID sellerWalletId = walletServiceClient.getWalletId(order.getJastiperId());
 
         walletServiceClient.createPayment(buyerWalletId, sellerWalletId, order.getTotalPrice());

@@ -66,9 +66,7 @@ class OrderServiceTest {
         order.setTotalPrice(new BigDecimal("100000"));
         order.setShippingAddress("Jl. Test No. 1");
 
-        when(inventoryServiceClient.getProductOwnerUsername(productId)).thenReturn("jastiper");
         when(inventoryServiceClient.getProductName(productId)).thenReturn("Produk Test");
-        when(authServiceClient.findUserIdByUsername("jastiper")).thenReturn(jastiperId);
         when(walletServiceClient.getBalance(titiperId)).thenReturn(new BigDecimal("500000"));
         when(walletServiceClient.getWalletId(titiperId)).thenReturn(buyerWallet);
         when(walletServiceClient.getWalletId(jastiperId)).thenReturn(sellerWallet);
@@ -120,9 +118,7 @@ class OrderServiceTest {
         order.setTotalPrice(new BigDecimal("999999999"));
         order.setShippingAddress("Jl. Test");
 
-        when(inventoryServiceClient.getProductOwnerUsername(productId)).thenReturn("jastiper");
         when(inventoryServiceClient.getProductName(productId)).thenReturn("Produk");
-        when(authServiceClient.findUserIdByUsername("jastiper")).thenReturn(jastiperId);
         when(walletServiceClient.getBalance(titiperId)).thenReturn(new BigDecimal("100000"));
 
         assertThrows(IllegalStateException.class, () -> orderService.createOrder(order));
@@ -136,9 +132,7 @@ class OrderServiceTest {
         order.setShippingAddress(null);
         order.setTotalPrice(new BigDecimal("100000"));
 
-        when(inventoryServiceClient.getProductOwnerUsername(productId)).thenReturn("jastiper");
         when(inventoryServiceClient.getProductName(productId)).thenReturn("Produk");
-        when(authServiceClient.findUserIdByUsername("jastiper")).thenReturn(jastiperId);
         when(walletServiceClient.getBalance(titiperId)).thenReturn(new BigDecimal("500000"));
         when(walletServiceClient.getWalletId(titiperId)).thenReturn(buyerWallet);
         when(walletServiceClient.getWalletId(jastiperId)).thenReturn(sellerWallet);
