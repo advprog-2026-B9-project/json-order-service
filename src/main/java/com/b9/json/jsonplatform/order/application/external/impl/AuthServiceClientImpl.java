@@ -7,7 +7,11 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -19,15 +23,23 @@ public class AuthServiceClientImpl implements AuthServiceClient {
     @Value("${service.auth.url}")
     private String authServiceUrl;
 
-    @Override
     public String findEmailById(UUID userId) {
-        // GET /api/v1/auth/internal/user?id={userId}
-        UserInternalDto user = restTemplate.getForObject(
-                authServiceUrl + "/api/v1/auth/internal/user?id=" + userId,
-                UserInternalDto.class
+        String url = authServiceUrl + "/api/v1/auth/list";
+        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
         );
-        if (user == null) throw new IllegalArgumentException("User tidak ditemukan dengan id: " + userId);
-        return user.getEmail();
+
+        List<Map<String, Object>> users = response.getBody();
+        if (users == null) throw new IllegalArgumentException("User tidak ditemukan");
+
+        return users.stream()
+                .filter(u -> userId.toString().equals(String.valueOf(u.get("id"))))
+                .map(u -> (String) u.get("email"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("User tidak ditemukan"));
     }
 
     @Override
