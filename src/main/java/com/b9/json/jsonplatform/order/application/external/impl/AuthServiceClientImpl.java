@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
@@ -44,9 +45,12 @@ public class AuthServiceClientImpl implements AuthServiceClient {
 
     @Override
     public void addRating(String email, int rating) {
-        String url = authServiceUrl + "/api/v1/auth/rating?jastiperEmail="
-                + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8)
-                + "&ratingScore=" + rating;
+        String url = UriComponentsBuilder
+                .fromHttpUrl(authServiceUrl + "/api/v1/auth/rating")
+                .queryParam("jastiperEmail", email)
+                .queryParam("ratingScore", rating)
+                .build()
+                .toUriString();
         restTemplate.postForObject(url, null, Void.class);
     }
 
