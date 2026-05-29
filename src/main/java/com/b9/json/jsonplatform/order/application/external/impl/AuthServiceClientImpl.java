@@ -44,13 +44,10 @@ public class AuthServiceClientImpl implements AuthServiceClient {
 
     @Override
     public void addRating(String email, int rating) {
-        // POST /api/v1/auth/rating?jastiperEmail=&ratingScore=
-        restTemplate.postForObject(
-                authServiceUrl + "/api/v1/auth/rating?jastiperEmail="
-                        + email + "&ratingScore=" + rating,
-                null,
-                Void.class
-        );
+        String url = authServiceUrl + "/api/v1/auth/rating?jastiperEmail="
+                + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8)
+                + "&ratingScore=" + rating;
+        restTemplate.postForObject(url, null, Void.class);
     }
 
     @Override
