@@ -77,7 +77,7 @@ public class OrderService {
         UUID buyerWalletId  = walletServiceClient.getWalletId(order.getTitiperId());
         UUID sellerWalletId = walletServiceClient.getWalletId(order.getJastiperId());
 
-        walletServiceClient.createRefund(buyerWalletId, sellerWalletId, order.getTotalPrice());
+        walletServiceClient.createRefund(sellerWalletId, buyerWalletId, order.getTotalPrice());
         inventoryServiceClient.increaseStock(order.getProductId(), order.getQuantity());
 
         order.setStatus("CANCELLED");
@@ -101,6 +101,8 @@ public class OrderService {
         inventoryServiceClient.addProductRating(order.getProductId(), productRating);
 
         String jastiperEmail = authServiceClient.findEmailById(order.getJastiperId());
+        System.out.println("===> jastiperId: " + order.getJastiperId());
+        System.out.println("===> jastiperEmail: " + jastiperEmail);
         authServiceClient.addRating(jastiperEmail, jastiperRating);
 
         return orderRepository.save(order);
